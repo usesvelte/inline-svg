@@ -22,7 +22,8 @@
     "check:es": "eslint src/**/*.{svelte,js,ts}",
     "format": "prettier --write src/**/*.{svelte,js,ts}",
     "check:sv": "svelte-check --tsconfig ./tsconfig.json",
-    "check": "pnpm format && pnpm check:sv && pnpm check:es && publint"
+    "check": "pnpm format && pnpm check:sv && pnpm check:es && publint",
+    "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s"
   },
   "exports": {
     ".": {
@@ -65,6 +66,7 @@
   "devDependencies": {
     "@eslint/compat": "1.2.8",
     "@types/node": "22.14.1",
+    "conventional-changelog-cli": "5.0.0",
     "eslint": "9.24.0",
     "eslint-config-prettier": "10.1.2",
     "eslint-plugin-svelte": "3.5.1",
