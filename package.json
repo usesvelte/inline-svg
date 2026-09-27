@@ -64,23 +64,18 @@
     "vite": ">=5.0.0 || >=6.0.0"
   },
   "devDependencies": {
-    "@eslint/compat": "1.2.8",
+    "@eslint/compat": "2.1.1",
     "@release-it/conventional-changelog": "12.0.2",
-    "@types/node": "22.14.1",
-    "eslint": "9.24.0",
-    "eslint-config-prettier": "10.1.2",
-    "eslint-plugin-svelte": "3.5.1",
-    "prettier": "3.5.3",
-    "prettier-plugin-svelte": "3.3.3",
-    "publint": "0.3.12",
+    "@types/node": "26.6.3",
+    "eslint": "10.11.0",
+    "eslint-config-prettier": "10.1.8",
+    "eslint-plugin-svelte": "3.23.0",
+    "prettier": "3.9.9",
+    "prettier-plugin-svelte": "4.1.1",
+    "publint": "0.3.24",
     "release-it": "21.1.0",
-    "svelte-check": "4.1.6",
-    "typescript": "5.8.3",
-    "typescript-eslint": "8.30.1"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild"
-    ]
+    "svelte-check": "4.7.6",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.70.1"
   }
 }
