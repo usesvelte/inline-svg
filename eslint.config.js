@@ -1,17 +1,18 @@
 import { fileURLToPath } from 'node:url'
-import { includeIgnoreFile } from '@eslint/compat'
-import svelte from 'eslint-plugin-svelte'
 import tseslint from 'typescript-eslint'
+import svelte from 'eslint-plugin-svelte'
+import { defineConfig } from 'eslint/config'
+import { includeIgnoreFile } from '@eslint/config-helpers'
 
 const gitignorePath = fileURLToPath(new URL('./.gitignore', import.meta.url))
 
-export default tseslint.config(
+export default defineConfig(
   includeIgnoreFile(gitignorePath),
+  ...tseslint.configs.recommended,
   ...svelte.configs['flat/recommended'],
   ...svelte.configs['flat/prettier'],
-
   {
-    files: ['**/*.svelte', '**/*.svelte.ts', '**/*.svelte.js'],
+    files: ['**/*.svelte', '**/*.svelte.ts', '**/*.svelte.js', '**/*.ts'],
 
     languageOptions: {
       parserOptions: {
