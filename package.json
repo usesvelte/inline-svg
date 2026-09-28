@@ -33,6 +33,10 @@
       "svelte": "./dist/index.js",
       "default": "./dist/index.js"
     },
+    "./vite": {
+      "types": "./dist/vite/index.d.ts",
+      "default": "./dist/vite/index.js"
+    },
     "./InlineSvg.svelte": {
       "types": "./dist/InlineSvg.svelte.d.ts",
       "svelte": "./dist/InlineSvg.svelte"
@@ -45,6 +49,9 @@
   },
   "typesVersions": {
     ">=4.0": {
+      "vite": [
+        "./dist/vite/index.d.ts"
+      ],
       "InlineSvg.svelte": [
         "./dist/InlineSvg.svelte.d.ts"
       ],
