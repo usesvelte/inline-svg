@@ -1,0 +1,40 @@
+# Runs on every push to main and on every pull request, so nothing is merged
+# unless the package builds, the tests pass and the published types resolve.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v4
+
+      - name: Setup engine & package manager 🗜️
+        uses: pnpm/setup@v3
+        with:
+          cache: true
+          version: 12
+          install: false
+
+      - name: Install dependencies 💼
+        run: pnpm install --frozen-lockfile
+
+      - name: Build 📦️
+        run: pnpm build
+
+      - name: Check 👀
+        run: pnpm check
+
+      # Checks the "exports" map of the packed tarball the way node10, node16 and
+      # bundlers resolve it. Two problems are expected and therefore ignored:
+      #   - cjs-resolves-to-esm: the package is ESM only.
+      #   - internal-resolution-error: the root entrypoint re-exports "./InlineSvg.svelte",
+      #     and the node16 resolver cannot load a ".svelte" file on its own.
+      # Every other resolution has to stay green.
+      - name: Check types of the tarball 🔍
+        run: pnpm exec attw --pack . --ignore-rules cjs-resolves-to-esm internal-resolution-error

@@ -1,10 +1,10 @@
-# This workflow will run tests using node and then publish a package to GitHub Packages when a release is created
-# For more information see: https://docs.github.com/en/actions/publishing-packages/publishing-nodejs-packages
-
+# Stages the package for npm when a GitHub release is created, instead of publishing it
+# straight away. "npm stage publish" uploads the tarball to a queue where it is not
+# installable, and a maintainer approves it with 2FA, either from npmjs.com or with
+# "npm stage list" followed by "npm stage approve <stage-id> --otp <code>". That way no
+# version reaches the registry without a human, and the token of this workflow cannot
+# publish on its own.
 name: Node.js Package
-
-env:
-  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
 on:
   release:
@@ -12,7 +12,7 @@ on:
 
 jobs:
   publish-npm:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       id-token: write
@@ -21,12 +21,42 @@ jobs:
       - name: Checkout 🛎️
         uses: actions/checkout@v4
 
-      - name: Use Node.js 🐢
+      - name: Setup pnpm 📦
+        uses: pnpm/setup@v3
+        with:
+          cache: true
+          version: 12
+          install: false
+
+      # "registry-url" makes this action write the
+      # "//registry.npmjs.org/:_authToken" line that NODE_AUTH_TOKEN feeds later.
+      # "node-version" is pinned because "npm stage" needs Node 22.14 or newer.
+      - name: Configure npm auth 🔑
         uses: actions/setup-node@v4
         with:
           node-version: 24
           registry-url: https://registry.npmjs.org/
 
-      - run: npm publish --provenance --access public
+      # "npm stage" only exists from npm 11.15, and the npm that ships with a Node
+      # release is not guaranteed to be that new. Installing it explicitly keeps this
+      # working instead of failing with an unknown command.
+      - name: Install npm with staged publishing 🔒
+        run: npm install --global npm@^11
+
+      - name: Install dependencies 💼
+        run: pnpm install --frozen-lockfile
+
+      - name: Build 📦️
+        run: pnpm build
+
+      # The build above is what puts dist/ in the tarball. "--provenance" then signs it
+      # with this job's OIDC token. There is no "--no-git-checks" here because npm has no
+      # git checks to skip, it is pnpm that refuses to publish from a dirty tree.
+      #
+      # The NPM_TOKEN secret has to be a token with "Read and write (stage only)". npm
+      # rejects "npm publish" with that kind of token, so a leaked one can queue a
+      # version but never make it live, and 2FA is still required to approve it.
+      - name: Stage 📤
+        run: npm stage publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
