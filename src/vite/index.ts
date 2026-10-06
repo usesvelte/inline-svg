@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import type { Plugin } from 'vite'
+import { parseSvg } from './parse-svg.js'
 
 const VIRTUAL_MODULE_ID = 'virtual:usesvelte/inline-svg/icons'
 const RESOLVED_VIRTUAL_MODULE_ID = `\0${VIRTUAL_MODULE_ID}`
@@ -91,14 +92,14 @@ export function inlineSvg(options: InlineSvgPluginOptions = {}): Plugin {
       const files = findSvgs(iconsDir)
       if (files.length === 0) this.warn(`no svg found in: ${iconsDir}`)
 
-      return [
-        ...files.map((file, i) => `import __svg${i} from ${JSON.stringify(`${file}?raw`)}`),
-        '',
-        'export const icons = {',
-        ...files.map((file, i) => `  ${JSON.stringify(toIconName(file, iconsDir))}: __svg${i},`),
-        '}',
-        '',
-      ].join('\n')
+      const entries = files.map((file) => {
+        const name = toIconName(file, iconsDir)
+        const raw = fs.readFileSync(file, 'utf8')
+        const { attrs, content } = parseSvg(raw, name)
+        return `  ${JSON.stringify(name)}: ${JSON.stringify({ attrs, content })},`
+      })
+
+      return ['export const icons = {', ...entries, '}', ''].join('\n')
     },
 
     hotUpdate({ file }) {

@@ -1,7 +1,5 @@
-const SVG_NAMESPACE = 'http://www.w3.org/2000/svg'
-
-const OPENING_SVG_TAG = /<svg(?=[\s/>])([^>]*?)(\/?>|$)/i
 const CLOSING_SVG_TAG = /<\/svg\s*>/gi
+const OPENING_SVG_TAG = /<svg(?=[\s/>])([^>]*?)(\/?>|$)/i
 const ATTRIBUTE = /(?:([^\s"'<>/=]+)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))|([^\s"'<>/=]+)/g
 
 export interface ParsedSvg {
@@ -18,12 +16,6 @@ function warn(message: string): ParsedSvg {
   return EMPTY
 }
 
-function collectAttrs(element: Element): Record<string, string> {
-  const attrs: Record<string, string> = {}
-  for (const attr of element.attributes) attrs[attr.name] = attr.value
-  return attrs
-}
-
 function collectAttrsFromMarkup(markup: string): Record<string, string> {
   const attrs: Record<string, string> = {}
   for (const match of markup.matchAll(ATTRIBUTE)) {
@@ -34,26 +26,9 @@ function collectAttrsFromMarkup(markup: string): Record<string, string> {
 }
 
 /**
- * Parses an svg with the DOM, which is the most accurate way, but only available on the browser.
- */
-function parseWithDom(raw: string, name: string): ParsedSvg {
-  const doc = new DOMParser().parseFromString(raw, 'image/svg+xml')
-  const root = doc.documentElement
-
-  if (root == null || doc.querySelector('parsererror') != null) {
-    return warn(`"${name}" is not a valid xml document`)
-  }
-
-  if (root.namespaceURI !== SVG_NAMESPACE || root.localName !== 'svg') {
-    return warn(`"${name}" has a <${root.localName}> element as root, expected <svg>`)
-  }
-
-  return { attrs: collectAttrs(root), content: root.innerHTML }
-}
-
-/**
- * Same as {@link parseWithDom} but without a DOM, for environments like the server, where the
- * markup of an svg is parsed with a plain regular expression instead.
+ * Parses the markup of an svg with a plain regular expression, separating the attributes of the
+ * root element from its contents. Runs in Node, inside the vite plugin, so that the server and the
+ * client receive the same parsed result.
  */
 function parseMarkup(raw: string, name: string): ParsedSvg {
   const opening = OPENING_SVG_TAG.exec(raw)
@@ -81,5 +56,5 @@ function parseMarkup(raw: string, name: string): ParsedSvg {
 export function parseSvg(raw: string | undefined, name: string): ParsedSvg {
   if (raw == null || raw.trim() === '') return warn(`"${name}" was not found in the icons directory`)
 
-  return typeof DOMParser === 'undefined' ? parseMarkup(raw, name) : parseWithDom(raw, name)
+  return parseMarkup(raw, name)
 }

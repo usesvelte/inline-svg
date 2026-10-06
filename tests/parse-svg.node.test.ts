@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it, vi } from 'vitest'
-import { parseSvg } from '../src/_internal/parse-svg.js'
+import { parseSvg } from '../src/vite/parse-svg.js'
 import { readFixture } from './fixtures/index.js'
 
 const GITHUB = readFixture('github.svg')

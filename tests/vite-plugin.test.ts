@@ -104,25 +104,18 @@ describe('inlineSvg', () => {
     expect(plugin.load('./icons.js')).toBeNull()
   })
 
-  it('inlines every svg of the icons directory as raw text', () => {
+  it('parses every svg of the icons directory', () => {
     const plugin = setup()
     plugin.configResolved({ root })
 
-    const nested = path.join(root, 'src/icons/frontend/svelte.svg')
-    const flat = path.join(root, 'src/icons/github.svg')
+    const output = plugin.load(RESOLVED_VIRTUAL_ID)
 
-    expect(plugin.load(RESOLVED_VIRTUAL_ID)).toBe(
-      [
-        `import __svg0 from ${JSON.stringify(`${nested}?raw`)}`,
-        `import __svg1 from ${JSON.stringify(`${flat}?raw`)}`,
-        '',
-        'export const icons = {',
-        '  "frontend/svelte": __svg0,',
-        '  "github": __svg1,',
-        '}',
-        '',
-      ].join('\n'),
+    expect(output).toContain(
+      '"github": {"attrs":{"xmlns":"http://www.w3.org/2000/svg","viewBox":"0 0 24 24","width":"24","height":"24"}',
     )
+    expect(output).toContain('"frontend/svelte": {"attrs":')
+    expect(output).toContain('"content":')
+    expect(output).not.toContain('__svg')
   })
 
   it('ignores files that are not svg', () => {
@@ -143,7 +136,7 @@ describe('inlineSvg', () => {
       fs.mkdirSync(path.join(freshRoot, 'src/icons'), { recursive: true })
       fs.writeFileSync(path.join(freshRoot, 'src/icons/vite.svg'), readFixture('frontend/svelte.svg'))
 
-      expect(plugin.load(RESOLVED_VIRTUAL_ID)).toContain('"vite": __svg0,')
+      expect(plugin.load(RESOLVED_VIRTUAL_ID)).toContain('"vite": {"attrs":')
     } finally {
       fs.rmSync(freshRoot, { recursive: true, force: true })
     }
