@@ -1,7 +1,8 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import type { Plugin } from 'vite'
+import { normalizePath, type Plugin } from 'vite'
 import { parseSvg } from './parse-svg.js'
+import { isIconFile } from './paths.js'
 
 const VIRTUAL_MODULE_ID = 'virtual:usesvelte/inline-svg/icons'
 const RESOLVED_VIRTUAL_MODULE_ID = `\0${VIRTUAL_MODULE_ID}`
@@ -37,11 +38,11 @@ function toIconName(file: string, dir: string): string {
  */
 function refreshIconsModule<T>(
   file: string,
-  iconsDir: string,
+  iconsDirPosix: string,
   getModule: (id: string) => T | undefined,
   invalidateModule: (mod: T) => void,
 ): T[] | undefined {
-  if (!file.startsWith(iconsDir + path.sep) || !file.endsWith('.svg')) return
+  if (!isIconFile(file, iconsDirPosix)) return
 
   const icons = getModule(RESOLVED_VIRTUAL_MODULE_ID)
   if (!icons) return
@@ -59,6 +60,7 @@ export function inlineSvg(options: InlineSvgPluginOptions = {}): Plugin {
   const dir = options.dir ?? 'src/icons'
 
   let iconsDir = path.resolve(dir)
+  let iconsDirPosix = normalizePath(iconsDir)
 
   return {
     name: 'usesvelte:inline-svg',
@@ -75,6 +77,7 @@ export function inlineSvg(options: InlineSvgPluginOptions = {}): Plugin {
 
     configResolved(config) {
       iconsDir = path.resolve(config.root, dir)
+      iconsDirPosix = normalizePath(iconsDir)
     },
 
     resolveId(id) {
@@ -105,7 +108,7 @@ export function inlineSvg(options: InlineSvgPluginOptions = {}): Plugin {
     hotUpdate({ file }) {
       return refreshIconsModule(
         file,
-        iconsDir,
+        iconsDirPosix,
         (id) => this.environment.moduleGraph.getModuleById(id),
         (mod) => this.environment.moduleGraph.invalidateModule(mod),
       )
@@ -115,7 +118,7 @@ export function inlineSvg(options: InlineSvgPluginOptions = {}): Plugin {
     handleHotUpdate({ file, server }) {
       return refreshIconsModule(
         file,
-        iconsDir,
+        iconsDirPosix,
         (id) => server.moduleGraph.getModuleById(id),
         (mod) => server.moduleGraph.invalidateModule(mod),
       )

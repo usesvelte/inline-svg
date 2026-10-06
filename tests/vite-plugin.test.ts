@@ -4,6 +4,7 @@ import os from 'node:os'
 import path from 'node:path'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { inlineSvg } from '../src/vite/index.js'
+import { isIconFile } from '../src/vite/paths.js'
 import { readFixture } from './fixtures/index.js'
 
 const VIRTUAL_ID = 'virtual:usesvelte/inline-svg/icons'
@@ -14,8 +15,8 @@ type PluginContext = { warn: (message: string) => void }
 type Hooks = {
   config: () => { optimizeDeps: { exclude: string[] } }
   configResolved: (config: { root: string }) => void
-  resolveId: (id: string) => string | null
   load: (this: PluginContext, id: string) => string | null
+  resolveId: (id: string) => string | null
   hotUpdate: (
     this: { environment: { moduleGraph: ModuleGraphStub } },
     options: { file: string },
@@ -183,5 +184,13 @@ describe('inlineSvg', () => {
     plugin.configResolved({ root: path.join(root, 'src') })
 
     expect(plugin.load(RESOLVED_VIRTUAL_ID)).toBe('export const icons = {}')
+  })
+})
+
+describe('isIconFile', () => {
+  it('matches svg files of the icons dir whatever the path separator is', () => {
+    expect(isIconFile('C:/proj/src/icons/a.svg', 'C:\\proj\\src\\icons')).toBe(true)
+    expect(isIconFile('C:/proj/src/icons2/a.svg', 'C:\\proj\\src\\icons')).toBe(false)
+    expect(isIconFile('/root/src/App.svelte', '/root/src/icons')).toBe(false)
   })
 })
