@@ -95,6 +95,8 @@ export function inlineSvg(options: InlineSvgPluginOptions = {}): Plugin {
       const files = findSvgs(iconsDir)
       if (files.length === 0) this.warn(`no svg found in: ${iconsDir}`)
 
+      for (const file of files) this.addWatchFile(file)
+
       const entries = files.map((file) => {
         const name = toIconName(file, iconsDir)
         const raw = fs.readFileSync(file, 'utf8')
@@ -103,6 +105,18 @@ export function inlineSvg(options: InlineSvgPluginOptions = {}): Plugin {
       })
 
       return ['export const icons = {', ...entries, '}', ''].join('\n')
+    },
+
+    watchChange(id, change) {
+      if (change.event !== 'create' && change.event !== 'delete') return
+      const { environment } = this
+      if (!('moduleGraph' in environment)) return
+      refreshIconsModule(
+        id,
+        iconsDirPosix,
+        (moduleId) => environment.moduleGraph.getModuleById(moduleId),
+        (mod) => environment.moduleGraph.invalidateModule(mod),
+      )
     },
 
     hotUpdate({ file }) {

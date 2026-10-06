@@ -10,13 +10,14 @@ import { readFixture } from './fixtures/index.js'
 const VIRTUAL_ID = 'virtual:usesvelte/inline-svg/icons'
 const RESOLVED_VIRTUAL_ID = `\0${VIRTUAL_ID}`
 
-type PluginContext = { warn: (message: string) => void }
+type PluginContext = { warn: (message: string) => void; addWatchFile: (id: string) => void }
 
 type Hooks = {
   config: () => { optimizeDeps: { exclude: string[] } }
   configResolved: (config: { root: string }) => void
   load: (this: PluginContext, id: string) => string | null
   resolveId: (id: string) => string | null
+  watchChange: (this: { environment: { moduleGraph: ModuleGraphStub } }, id: string, change: { event: string }) => void
   hotUpdate: (
     this: { environment: { moduleGraph: ModuleGraphStub } },
     options: { file: string },
@@ -40,8 +41,10 @@ function setup(dir?: string) {
     graph,
     config: () => hooks.config(),
     configResolved: (config: { root: string }) => hooks.configResolved(config),
+    load: (id: string) => hooks.load.call({ warn, addWatchFile: vi.fn() }, id),
     resolveId: (id: string) => hooks.resolveId(id),
-    load: (id: string) => hooks.load.call({ warn }, id),
+    watchChange: (id: string, change: { event: string }) =>
+      hooks.watchChange.call({ environment: { moduleGraph: graph } }, id, change),
     hotUpdate: (file: string) => hooks.hotUpdate.call({ environment: { moduleGraph: graph } }, { file }),
     handleHotUpdate: (file: string) => hooks.handleHotUpdate({ file, server: { moduleGraph: graph } }),
   }
@@ -94,6 +97,27 @@ describe('inlineSvg', () => {
 
     expect(plugin.handleHotUpdate(path.join(root, 'src/icons/github.svg'))).toEqual([plugin.graph.iconsModule])
     expect(plugin.graph.invalidateModule).toHaveBeenCalledWith(plugin.graph.iconsModule)
+  })
+
+  it('refreshes the virtual module when an svg is created or deleted during a watch build', () => {
+    const plugin = setup()
+    plugin.configResolved({ root })
+
+    plugin.watchChange(path.join(root, 'src/icons/added.svg'), { event: 'create' })
+    plugin.watchChange(path.join(root, 'src/icons/github.svg'), { event: 'delete' })
+
+    expect(plugin.graph.invalidateModule).toHaveBeenCalledWith(plugin.graph.iconsModule)
+    expect(plugin.graph.invalidateModule).toHaveBeenCalledTimes(2)
+  })
+
+  it('ignores updates and files outside the icons dir during a watch build', () => {
+    const plugin = setup()
+    plugin.configResolved({ root })
+
+    plugin.watchChange(path.join(root, 'src/icons/github.svg'), { event: 'update' })
+    plugin.watchChange(path.join(root, 'src/App.svelte'), { event: 'create' })
+
+    expect(plugin.graph.invalidateModule).not.toHaveBeenCalled()
   })
 
   it('only resolves its own virtual module', () => {
