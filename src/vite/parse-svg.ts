@@ -15,11 +15,14 @@ export interface ParsedSvg {
   content: string
 }
 
-const EMPTY: ParsedSvg = { attrs: {}, content: '' }
+const warned = new Set<string>()
 
-function warn(message: string): ParsedSvg {
-  console.warn(`[inline-svg] ${message}`)
-  return EMPTY
+function warn(name: string, message: string): ParsedSvg {
+  if (!warned.has(name)) {
+    warned.add(name)
+    console.warn(`[inline-svg] ${message}`)
+  }
+  return { attrs: {}, content: '' }
 }
 
 function decodeEntities(value: string): string {
@@ -140,11 +143,11 @@ function isSvgOpening(raw: string, start: number): boolean {
  */
 function parseMarkup(raw: string, name: string): ParsedSvg {
   const openingStart = skipMisc(raw, 0)
-  if (openingStart === -1) return warn(`"${name}" is not a valid xml document`)
-  if (!isSvgOpening(raw, openingStart)) return warn(`"${name}" has no <svg> element`)
+  if (openingStart === -1) return warn(name, `"${name}" is not a valid xml document`)
+  if (!isSvgOpening(raw, openingStart)) return warn(name, `"${name}" has no <svg> element`)
 
   const openingEnd = findTagEnd(raw, openingStart)
-  if (openingEnd === -1) return warn(`"${name}" has an unclosed <svg> element`)
+  if (openingEnd === -1) return warn(name, `"${name}" has an unclosed <svg> element`)
 
   const selfClosing = raw.charAt(openingEnd - 1) === '/'
   const attrs = collectAttrsFromMarkup(raw.slice(openingStart + 4, openingEnd - (selfClosing ? 1 : 0)))
@@ -156,21 +159,21 @@ function parseMarkup(raw: string, name: string): ParsedSvg {
   while (index < raw.length) {
     if (raw.startsWith('<!--', index)) {
       const end = raw.indexOf('-->', index + 4)
-      if (end === -1) return warn(`"${name}" is not a valid xml document`)
+      if (end === -1) return warn(name, `"${name}" is not a valid xml document`)
       index = end + 3
       continue
     }
 
     if (raw.startsWith('<![CDATA[', index)) {
       const end = raw.indexOf(']]>', index + 9)
-      if (end === -1) return warn(`"${name}" is not a valid xml document`)
+      if (end === -1) return warn(name, `"${name}" is not a valid xml document`)
       index = end + 3
       continue
     }
 
     if (raw.startsWith('<?', index)) {
       const end = raw.indexOf('?>', index + 2)
-      if (end === -1) return warn(`"${name}" is not a valid xml document`)
+      if (end === -1) return warn(name, `"${name}" is not a valid xml document`)
       index = end + 2
       continue
     }
@@ -181,14 +184,14 @@ function parseMarkup(raw: string, name: string): ParsedSvg {
     }
 
     const tagEnd = findTagEnd(raw, index)
-    if (tagEnd === -1) return warn(`"${name}" has an unclosed <svg> element`)
+    if (tagEnd === -1) return warn(name, `"${name}" has an unclosed <svg> element`)
 
     if (raw.startsWith('</', index)) {
       const tag = raw.slice(index + 2, tagEnd).trim()
-      if (stack.pop() !== tag) return warn(`"${name}" is not a valid xml document`)
+      if (stack.pop() !== tag) return warn(name, `"${name}" is not a valid xml document`)
       if (stack.length === 0) {
         if (skipMisc(raw, tagEnd + 1) !== raw.length) {
-          return warn(`"${name}" is not a valid xml document`)
+          return warn(name, `"${name}" is not a valid xml document`)
         }
         return { attrs, content: raw.slice(openingEnd + 1, index) }
       }
@@ -197,13 +200,13 @@ function parseMarkup(raw: string, name: string): ParsedSvg {
     }
 
     const tag = /^<\s*([^\s/>]+)/.exec(raw.slice(index, tagEnd))?.[1]
-    if (tag == null) return warn(`"${name}" is not a valid xml document`)
+    if (tag == null) return warn(name, `"${name}" is not a valid xml document`)
 
     if (raw.charAt(tagEnd - 1) !== '/') stack.push(tag)
     index = tagEnd + 1
   }
 
-  return warn(`"${name}" has an unclosed <svg> element`)
+  return warn(name, `"${name}" has an unclosed <svg> element`)
 }
 
 /**
@@ -214,7 +217,7 @@ function parseMarkup(raw: string, name: string): ParsedSvg {
  * @param name Name of the icon, only used to report errors
  */
 export function parseSvg(raw: string | undefined, name: string): ParsedSvg {
-  if (raw == null || raw.trim() === '') return warn(`"${name}" was not found in the icons directory`)
+  if (raw == null || raw.trim() === '') return warn(name, `"${name}" was not found in the icons directory`)
 
   return parseMarkup(raw, name)
 }

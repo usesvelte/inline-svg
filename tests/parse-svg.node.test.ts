@@ -118,4 +118,12 @@ describe('parseSvg (server)', () => {
 
     warn.mockRestore()
   })
+
+  it('returns a fresh empty icon for every failure', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    expect(parseSvg(undefined, 'fresh-a').attrs).not.toBe(parseSvg(undefined, 'fresh-b').attrs)
+
+    warn.mockRestore()
+  })
 })

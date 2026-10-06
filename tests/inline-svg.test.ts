@@ -87,15 +87,21 @@ it('replaces the svg content when the name changes', async () => {
   expect(html).not.toContain('M9 19c')
 })
 
-it('warns and renders an empty svg for a missing icon', async () => {
+it('warns once and renders an empty svg for a missing icon', async () => {
   const warn = vi.spyOn(console, 'warn')
+  probe.name = 'no-existe'
   instance = mount(Harness, { target })
+  const other = document.createElement('div')
+  document.body.append(other)
+  const secondInstance: ReturnType<typeof mount> = mount(Harness, { target: other })
 
-  probe.name = 'not-exist'
   await tick()
 
-  expect(warn).toHaveBeenCalledWith('[inline-svg] "not-exist" was not found in the icons directory')
-  const svg = target.querySelector('svg')
-  expect(svg?.innerHTML).toBe('')
-  expect(svg?.getAttribute('xmlns')).toBe('http://www.w3.org/2000/svg')
+  expect(warn).toHaveBeenCalledTimes(1)
+  expect(warn).toHaveBeenCalledWith('[inline-svg] "no-existe" was not found in the icons directory')
+  expect(target.querySelector('svg')?.innerHTML).toBe('')
+  expect(target.querySelector('svg')?.getAttribute('xmlns')).toBe('http://www.w3.org/2000/svg')
+
+  unmount(secondInstance)
+  other.remove()
 })
