@@ -30,16 +30,71 @@ describe('parseSvg (server)', () => {
     expect(attrs).toEqual({ a: '1', b: '2', c: '3', disabled: '' })
   })
 
-  it('only uses the first opening tag and the last closing one', () => {
-    const { content } = parseSvg('<svg><svg /></svg></svg>', 'nested')
+  it('returns the content of the root element', () => {
+    const { content } = parseSvg('<svg><svg /></svg>', 'nested')
 
-    expect(content).toBe('<svg /></svg>')
+    expect(content).toBe('<svg />')
+  })
+
+  it('rejects markup after the root element instead of swallowing it', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    expect(parseSvg('<svg><path /></svg></svg>', 'trailing')).toEqual({ attrs: {}, content: '' })
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('not a valid xml document'))
+
+    warn.mockRestore()
   })
 
   it('ignores the xml prolog', () => {
     const { attrs } = parseSvg('<?xml version="1.0"?><svg width="1" />', 'prolog')
 
     expect(attrs).toEqual({ width: '1' })
+  })
+
+  it('skips a comment that mentions an svg', () => {
+    const { attrs, content } = parseSvg(readFixture('comment-before.svg'), 'comment-before')
+
+    expect(attrs).toEqual({ xmlns: 'http://www.w3.org/2000/svg', viewBox: '0 0 24 24' })
+    expect(content).toContain('<path')
+    expect(content).not.toContain('en docs')
+  })
+
+  it('keeps a > that sits inside a quoted attribute', () => {
+    const { attrs, content } = parseSvg(readFixture('attr-with-gt.svg'), 'attr-with-gt')
+
+    expect(attrs['aria-label']).toBe('a > b')
+    expect(content).toContain('<path')
+  })
+
+  it('decodes the entities of the attributes', () => {
+    const { attrs } = parseSvg(readFixture('entities.svg'), 'entities')
+
+    expect(attrs['title']).toBe('a & b')
+  })
+
+  it('ignores a trailing comment that contains a closing tag', () => {
+    const { content } = parseSvg(readFixture('trailing-comment.svg'), 'trailing-comment')
+
+    expect(content).toContain('<path')
+    expect(content).not.toContain('<!--')
+  })
+
+  it('rejects a document whose root is not an svg', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    expect(parseSvg(readFixture('wrapped-root.svg'), 'wrapped-root')).toEqual({ attrs: {}, content: '' })
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('no <svg> element'))
+
+    warn.mockRestore()
+  })
+
+  it('rejects malformed xml', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    expect(parseSvg(readFixture('malformed.svg'), 'malformed')).toEqual({ attrs: {}, content: '' })
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('not a valid xml document'))
+
+    warn.mockRestore()
   })
 
   it('reports a missing icon instead of rendering it', () => {
