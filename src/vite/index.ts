@@ -94,12 +94,24 @@ export function inlineSvg(options: InlineSvgPluginOptions = {}): Plugin {
     load(id) {
       if (id !== RESOLVED_VIRTUAL_MODULE_ID) return null
 
-      if (!fs.existsSync(iconsDir)) {
+      const stat = fs.statSync(iconsDir, { throwIfNoEntry: false })
+      if (stat == null) {
         this.warn(`icons directory not found: ${iconsDir}. Is the "dir" option of inlineSvg() correct?`)
         return 'export const icons = {}'
       }
+      if (!stat.isDirectory()) {
+        this.warn(`icons path is not a directory: ${iconsDir}. "dir" must point to a directory`)
+        return 'export const icons = {}'
+      }
 
-      const files = findSvgs(iconsDir)
+      let files: string[]
+      try {
+        files = findSvgs(iconsDir)
+      } catch (error) {
+        this.warn(`icons directory cannot be read: ${iconsDir}. ${error}`)
+        return 'export const icons = {}'
+      }
+
       if (files.length === 0) this.warn(`no svg found in: ${iconsDir}`)
 
       for (const file of files) this.addWatchFile(file)

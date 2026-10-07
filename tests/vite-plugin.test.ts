@@ -217,6 +217,21 @@ describe('inlineSvg', () => {
     expect(plugin.warn).toHaveBeenCalledWith(expect.stringContaining('icons directory not found'))
   })
 
+  it('warns instead of failing when the dir option points to a file', () => {
+    const file = path.join(root, 'src/icon-dir.svg')
+    fs.writeFileSync(file, readFixture('github.svg'))
+
+    try {
+      const plugin = setup('src/icon-dir.svg')
+      plugin.configResolved({ root })
+
+      expect(plugin.load(RESOLVED_VIRTUAL_ID)).toBe('export const icons = {}')
+      expect(plugin.warn).toHaveBeenCalledWith(expect.stringContaining('not a directory'))
+    } finally {
+      fs.rmSync(file)
+    }
+  })
+
   it('warns when the directory exists but holds no svg', () => {
     const emptyIcons = fs.mkdtempSync(path.join(os.tmpdir(), 'inline-svg-empty-'))
     fs.writeFileSync(path.join(emptyIcons, 'README.md'), 'not an icon')
