@@ -39,7 +39,8 @@
     },
     "./InlineSvg.svelte": {
       "types": "./dist/InlineSvg.svelte.d.ts",
-      "svelte": "./dist/InlineSvg.svelte"
+      "svelte": "./dist/InlineSvg.svelte",
+      "default": "./dist/InlineSvg.svelte"
     },
     "./types.ts": {
       "types": "./dist/types.d.ts",
