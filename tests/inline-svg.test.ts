@@ -2,11 +2,11 @@
 import { render } from 'svelte/server'
 import { hydrate, mount, tick, unmount } from 'svelte'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
-// @ts-expect-error the server variant is resolved by the ssr-variant plugin of vitest.config.ts
-import InlineSvgSsr from '../src/InlineSvg.svelte?ssr'
 import { parseSvg } from '../src/vite/parse-svg.js'
 import { readFixture } from './fixtures/index.js'
 import InlineSvg from '../src/InlineSvg.svelte'
+// @ts-expect-error the server variant is resolved by the ssr-variant plugin of vitest.config.ts
+import InlineSvgSsr from '../src/InlineSvg.svelte?ssr'
 import { probe } from './probe.svelte.js'
 import Harness from './harness.svelte'
 
