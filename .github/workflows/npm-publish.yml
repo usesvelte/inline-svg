@@ -51,6 +51,12 @@ jobs:
       - name: Build 📦️
         run: pnpm build
 
+      - name: Check 👀
+        run: pnpm check
+
+      - name: Test 🧪
+        run: pnpm test
+
       # The build above is what puts dist/ in the tarball. "--provenance" then signs it
       # with this job's OIDC token. There is no "--no-git-checks" here because npm has no
       # git checks to skip, it is pnpm that refuses to publish from a dirty tree.
