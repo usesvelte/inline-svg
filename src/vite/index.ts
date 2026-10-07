@@ -19,7 +19,14 @@ export interface InlineSvgPluginOptions {
 function findSvgs(dir: string): string[] {
   return fs
     .readdirSync(dir, { recursive: true, withFileTypes: true })
-    .filter((entry) => entry.isFile() && entry.name.endsWith('.svg'))
+    .filter((entry) => {
+      if (!entry.name.toLowerCase().endsWith('.svg')) return false
+      try {
+        return fs.statSync(path.join(entry.parentPath, entry.name)).isFile()
+      } catch {
+        return false
+      }
+    })
     .map((entry) => path.join(entry.parentPath, entry.name))
     .sort()
 }
@@ -29,7 +36,7 @@ function toIconName(file: string, dir: string): string {
     .relative(dir, file)
     .split(path.sep)
     .join('/')
-    .replace(/\.svg$/, '')
+    .replace(/\.svg$/i, '')
 }
 
 /**
@@ -96,6 +103,20 @@ export function inlineSvg(options: InlineSvgPluginOptions = {}): Plugin {
       if (files.length === 0) this.warn(`no svg found in: ${iconsDir}`)
 
       for (const file of files) this.addWatchFile(file)
+
+      const names = new Map<string, string[]>()
+      for (const file of files) {
+        const name = toIconName(file, iconsDir)
+        const group = names.get(name)
+        if (group) group.push(file)
+        else names.set(name, [file])
+      }
+      for (const [name, group] of names) {
+        if (group.length > 1) {
+          const sources = group.map((file) => path.relative(iconsDir, file)).join(', ')
+          this.warn(`duplicate icon name: "${name}" (${sources})`)
+        }
+      }
 
       const entries = files.map((file) => {
         const name = toIconName(file, iconsDir)

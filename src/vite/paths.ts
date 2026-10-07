@@ -3,5 +3,5 @@ function toPosix(file: string): string {
 }
 
 export function isIconFile(file: string, iconsDir: string): boolean {
-  return toPosix(file).startsWith(toPosix(iconsDir) + '/') && file.endsWith('.svg')
+  return toPosix(file).startsWith(toPosix(iconsDir) + '/') && file.toLowerCase().endsWith('.svg')
 }

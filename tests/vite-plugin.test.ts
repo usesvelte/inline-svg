@@ -68,6 +68,7 @@ beforeAll(() => {
   // Real .svg files, so the plugin is exercised against the same markup a user ships.
   fs.writeFileSync(path.join(root, 'src/icons/github.svg'), readFixture('github.svg'))
   fs.writeFileSync(path.join(root, 'src/icons/frontend/svelte.svg'), readFixture('frontend/svelte.svg'))
+  fs.writeFileSync(path.join(root, 'src/icons/MAYUS.SVG'), readFixture('github.svg'))
   fs.writeFileSync(path.join(root, 'src/icons/README.md'), 'not an icon')
 })
 
@@ -148,6 +149,47 @@ describe('inlineSvg', () => {
     plugin.configResolved({ root })
 
     expect(plugin.load(RESOLVED_VIRTUAL_ID)).not.toContain('README')
+  })
+
+  it('matches the extension case-insensitively', () => {
+    const plugin = setup()
+    plugin.configResolved({ root })
+
+    expect(plugin.load(RESOLVED_VIRTUAL_ID)).toContain('"MAYUS":')
+  })
+
+  it.skipIf(process.platform === 'win32')('follows svgs that are symbolic links', () => {
+    const link = path.join(root, 'src/icons/link.svg')
+    fs.symlinkSync(path.join(root, 'src/icons/github.svg'), link)
+
+    try {
+      const plugin = setup()
+      plugin.configResolved({ root })
+
+      expect(plugin.load(RESOLVED_VIRTUAL_ID)).toContain('"link":')
+    } finally {
+      fs.rmSync(link)
+    }
+  })
+
+  it('warns when two files map to the same icon name', () => {
+    const dupes = fs.mkdtempSync(path.join(os.tmpdir(), 'inline-svg-dupes-'))
+    fs.mkdirSync(path.join(dupes, 'src/icons'), { recursive: true })
+    fs.writeFileSync(path.join(dupes, 'src/icons/case.svg'), readFixture('github.svg'))
+    fs.writeFileSync(path.join(dupes, 'src/icons/case.SVG'), readFixture('frontend/svelte.svg'))
+
+    try {
+      const plugin = setup()
+      plugin.configResolved({ root: dupes })
+
+      plugin.load(RESOLVED_VIRTUAL_ID)
+
+      expect(plugin.warn).toHaveBeenCalledWith(
+        expect.stringContaining('duplicate icon name: "case" (case.SVG, case.svg)'),
+      )
+    } finally {
+      fs.rmSync(dupes, { recursive: true, force: true })
+    }
   })
 
   it('picks up svgs that were added after the module was first loaded', () => {
