@@ -1,4 +1,4 @@
-import { icons } from 'virtual:usesvelte/inline-svg/icons'
+import { icons } from 'virtual:usesvelte/inline-svg'
 import type { ParsedSvg } from '../vite/parse-svg.js'
 
 /**

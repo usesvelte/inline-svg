@@ -10,7 +10,7 @@ import InlineSvgSsr from '../src/InlineSvg.svelte?ssr'
 import { probe } from './probe.svelte.js'
 import Harness from './harness.svelte'
 
-vi.mock('virtual:usesvelte/inline-svg/icons', () => ({
+vi.mock('virtual:usesvelte/inline-svg', () => ({
   icons: {
     github: parseSvg(readFixture('github.svg'), 'github'),
     'frontend/svelte': parseSvg(readFixture('frontend/svelte.svg'), 'frontend/svelte'),
