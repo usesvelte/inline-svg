@@ -1,7 +1,7 @@
 {
   "name": "@usesvelte/inline-svg",
   "description": "Inline SVGs in Svelte",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",

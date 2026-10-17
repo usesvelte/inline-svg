@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.1.0](https://github.com/usesvelte/inline-svg/compare/v1.0.1...v1.1.0) (2026-10-17)
+
+### ✨ Features
+
+* **vite:** generate the icon names declaration file from the icons directory ([9f9615d](https://github.com/usesvelte/inline-svg/commit/9f9615d8dc96e8aeeb517ec8b9fe8350b00d9fab))
+
+### 📚 Documentation
+
+* document the typed icon names ([0651f7a](https://github.com/usesvelte/inline-svg/commit/0651f7a3a5d4aa43191aa4b058ce7d782c979e8d))
+
+### 🚜 Code Refactoring
+
+* **core:** rename the icons virtual module to `virtual:usesvelte/inline-svg` ([6ac4450](https://github.com/usesvelte/inline-svg/commit/6ac44509c11e72621c9389df5bd564ec105dbd99))
+
+### Miscellaneous Tasks
+
+* **deps:** update dependencies ([e553852](https://github.com/usesvelte/inline-svg/commit/e553852f66e047f9acd3225736a0287916786fc2))
+
 ## [1.0.1](https://github.com/usesvelte/inline-svg/compare/v1.0.0...v1.0.1) (2026-10-07)
 
 ### 🐛 Bug Fixes
