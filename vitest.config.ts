@@ -24,11 +24,18 @@ function ssrVariant(): Plugin {
 }
 
 export default defineConfig({
-  plugins: [svelte(), inlineSvg(), ssrVariant()],
+  // `types: false` keeps the plugin from writing a declaration file into this repo
+  plugins: [svelte(), inlineSvg({ types: false }), ssrVariant()],
   resolve: {
     conditions: ['browser'],
   },
   test: {
     environment: 'node',
+    typecheck: {
+      enabled: true,
+      // Own program: the augmentation of the icon names must not leak into the repo typecheck
+      tsconfig: './tests/types/tsconfig.json',
+      include: ['tests/types/**/*.test-d.ts'],
+    },
   },
 })

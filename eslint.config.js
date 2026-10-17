@@ -8,6 +8,8 @@ const gitignorePath = fileURLToPath(new URL('./.gitignore', import.meta.url))
 
 export default defineConfig(
   includeIgnoreFile(gitignorePath),
+  // typechecked by its own program (tests/types/tsconfig.json), not by the projectService
+  { ignores: ['tests/types/**'] },
   ...tseslint.configs.recommended,
   ...svelte.configs['flat/recommended'],
   ...svelte.configs['flat/prettier'],
