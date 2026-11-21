@@ -1,0 +1,16 @@
+{
+  "name": "fixture-astro",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "devDependencies": {
+    "@astrojs/svelte": "9.1.6",
+    "@usesvelte/inline-svg": "link:../../..",
+    "astro": "7.4.13",
+    "svelte": "5.59.1"
+  }
+}

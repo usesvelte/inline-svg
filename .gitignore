@@ -24,3 +24,8 @@ Thumbs.db
 # Vite
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# astro fixture: build output and generated files
+tests/fixtures/astro/dist
+tests/fixtures/astro/.astro
+tests/fixtures/astro/src/icons/inline-svg.d.ts
