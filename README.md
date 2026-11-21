@@ -22,6 +22,10 @@ pnpm install -D @usesvelte/inline-svg
 
 ## Setup
 
+> [!TIP]
+> Using Astro? Skip this section and add the [Astro integration](#astro) instead: it registers the
+> plugin below and the required vite config for you.
+
 The svgs are read at build time by a Vite plugin, so the plugin is required and has to be
 registered in `vite.config.js` (or `vite.config.ts`):
 
@@ -35,6 +39,20 @@ export default defineConfig({
 })
 ```
 
+On the server the package also has to be processed by Vite instead of being loaded straight from
+`node_modules`, so add it to `resolve.noExternal` (Vite 6+, `ssr.noExternal` on older versions)
+too — the plugin alone is not enough:
+
+```js
+export default defineConfig({
+  plugins: [inlineSvg(), sveltekit()],
+  resolve: { noExternal: ['@usesvelte/inline-svg'] },
+})
+```
+
+Without it the server externalizes the package and fails with
+`Unknown file extension ".svelte"` or `Cannot find module 'virtual:usesvelte/inline-svg'`.
+
 By default the svgs are read from `src/icons`. Use the `dir` option for any other location:
 
 ```js
@@ -46,6 +64,39 @@ no svgs, the plugin prints a warning in the terminal instead of failing the buil
 
 The svgs are inlined at build time, so `InlineSvg` renders the same markup on the server and on
 the client, without touching the filesystem at runtime.
+
+## Astro
+
+Add the integration to `astro.config.mjs`, next to `@astrojs/svelte`:
+
+```js
+import svelte from '@astrojs/svelte'
+import { defineConfig } from 'astro/config'
+import inlineSvg from '@usesvelte/inline-svg/astro'
+
+export default defineConfig({
+  integrations: [svelte(), inlineSvg()],
+})
+```
+
+`@astrojs/svelte` is the only extra dependency: it compiles the component, the integration wires
+the library up. Nothing has to be added to `vite.plugins` or to the vite config by hand.
+
+The integration does two things: it registers the vite plugin of the [setup](#setup) section, and
+it marks `@usesvelte/inline-svg` as `resolve.noExternal` / `ssr.noExternal` so the server always
+processes the package. The second part cannot be skipped on your side either: Vite externalizes
+dependencies in SSR by default, and Node cannot load this package directly (it ships a `.svelte`
+file and imports the `virtual:usesvelte/inline-svg` module), so the server render would fail
+with `Unknown file extension ".svelte"`.
+
+The `dir` option is passed to the plugin unchanged, and both exports are equivalent:
+
+```js
+import inlineSvg from '@usesvelte/inline-svg/astro'
+// or: import { inlineSvg } from '@usesvelte/inline-svg/astro'
+
+inlineSvg({ dir: 'src/lib/assets/icons' })
+```
 
 ## Usage
 
