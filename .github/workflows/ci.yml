@@ -38,6 +38,9 @@ jobs:
       - name: Test 🧪
         run: pnpm test
 
+      - name: Astro integration (E2E) 🧪
+        run: pnpm test.astro
+
       # The "attw" ignore-rules referenced above are part of the "check" script in
       # package.json, so the tarball types are still verified on every push and PR.
       #   - cjs-resolves-to-esm: the package is ESM only.
