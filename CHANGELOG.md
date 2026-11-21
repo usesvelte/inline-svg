@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.2.0](https://github.com/usesvelte/inline-svg/compare/v1.1.0...v1.2.0) (2026-11-21)
+
+### ✨ Features
+
+* **astro:** add the integration and its public export ([b58ee88](https://github.com/usesvelte/inline-svg/commit/b58ee888f6922bc6ecb50204ff3bb0bba9a5c6f1))
+
+### 📚 Documentation
+
+* document the Astro integration and fix the virtual module id ([6ddb3f3](https://github.com/usesvelte/inline-svg/commit/6ddb3f315f5397bdef46a7a1106f767dd4476975))
+
+### 📝 Tests
+
+* **astro:** automate the fixture end-to-end check in CI ([cc69ff0](https://github.com/usesvelte/inline-svg/commit/cc69ff081c548d54caaaee7cce477cee85c598ec))
+
+### ⚙️ Continuous Integration
+
+* **deps:** update workflows dependencies ([0758bc9](https://github.com/usesvelte/inline-svg/commit/0758bc9155eb7ede516af481b03ca1195676ff41))
+
+### Miscellaneous Tasks
+
+* **deps:** update dependencies ([c4404ec](https://github.com/usesvelte/inline-svg/commit/c4404ec3c7153cb01c0000f0dcd6d49b75ddb919))
+
 ## [1.1.0](https://github.com/usesvelte/inline-svg/compare/v1.0.1...v1.1.0) (2026-10-17)
 
 ### ✨ Features
