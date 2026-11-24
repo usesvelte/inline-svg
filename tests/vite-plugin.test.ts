@@ -10,6 +10,20 @@ import { readFixture } from './fixtures/index.js'
 const VIRTUAL_ID = 'virtual:usesvelte/inline-svg'
 const RESOLVED_VIRTUAL_ID = `\0${VIRTUAL_ID}`
 
+/** NTFS/APFS collapse two names that differ only in case, so the collision fixture cannot exist there. */
+function isCaseInsensitiveFs(): boolean {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'inline-svg-case-'))
+  try {
+    fs.writeFileSync(path.join(dir, 'probe'), 'a')
+    fs.writeFileSync(path.join(dir, 'PROBE'), 'b')
+    return fs.readdirSync(dir).length === 1
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true })
+  }
+}
+
+const CASE_INSENSITIVE_FS = isCaseInsensitiveFs()
+
 type PluginContext = { warn: (message: string) => void; addWatchFile: (id: string) => void }
 
 type Hooks = {
@@ -189,7 +203,7 @@ describe('inlineSvg', () => {
     }
   })
 
-  it('warns when two files map to the same icon name', () => {
+  it.skipIf(CASE_INSENSITIVE_FS)('warns when two files map to the same icon name', () => {
     const dupes = fs.mkdtempSync(path.join(os.tmpdir(), 'inline-svg-dupes-'))
     fs.mkdirSync(path.join(dupes, 'src/icons'), { recursive: true })
     fs.writeFileSync(path.join(dupes, 'src/icons/case.svg'), readFixture('github.svg'))
