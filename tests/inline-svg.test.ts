@@ -105,3 +105,23 @@ it('warns once and renders an empty svg for a missing icon', async () => {
   unmount(secondInstance)
   other.remove()
 })
+
+it('does not treat inherited object keys as icons', () => {
+  const warn = vi.spyOn(console, 'warn')
+
+  for (const name of ['toString', 'constructor', '__proto__']) {
+    probe.name = name
+    instance = mount(Harness, { target })
+
+    expect(target.querySelector('svg')?.innerHTML).toBe('')
+    expect(target.querySelector('svg')?.getAttribute('xmlns')).toBe('http://www.w3.org/2000/svg')
+
+    unmount(instance)
+    instance = undefined
+  }
+
+  expect(warn).toHaveBeenCalledTimes(3)
+  for (const name of ['toString', 'constructor', '__proto__']) {
+    expect(warn).toHaveBeenCalledWith(`[inline-svg] "${name}" was not found in the icons directory`)
+  }
+})

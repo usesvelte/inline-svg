@@ -37,7 +37,8 @@ function decodeEntities(value: string): string {
 }
 
 function collectAttrsFromMarkup(markup: string): Record<string, string> {
-  const attrs: Record<string, string> = {}
+  // A plain object would silently drop an attribute named "__proto__".
+  const attrs: Record<string, string> = Object.create(null)
   for (const match of markup.matchAll(ATTRIBUTE)) {
     if (match[1] != null) attrs[match[1]] = decodeEntities(match[2] ?? match[3] ?? match[4] ?? '')
     else if (match[5] != null) attrs[match[5]] = ''

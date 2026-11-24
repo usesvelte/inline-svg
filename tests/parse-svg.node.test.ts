@@ -25,9 +25,10 @@ describe('parseSvg (server)', () => {
   })
 
   it('reads the attributes of every quoting style', () => {
-    const { attrs } = parseSvg(`<svg a="1" b='2' c=3 disabled></svg>`, 'attrs')
+    const { attrs } = parseSvg(`<svg a="1" b='2' c=3 disabled __proto__="proto"></svg>`, 'attrs')
 
-    expect(attrs).toEqual({ a: '1', b: '2', c: '3', disabled: '' })
+    expect(attrs).toEqual({ a: '1', b: '2', c: '3', disabled: '', ['__proto__']: 'proto' })
+    expect(Object.prototype.hasOwnProperty.call(attrs, '__proto__')).toBe(true)
   })
 
   it('returns the content of the root element', () => {
