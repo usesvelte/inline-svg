@@ -1,11 +1,10 @@
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { spawnSync } from 'node:child_process'
-import { readFileSync, writeFileSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const fixtureDir = path.join(root, 'tests/fixtures/astro')
-const configPath = path.join(fixtureDir, 'astro.config.mjs')
 const htmlPath = path.join(fixtureDir, 'dist/index.html')
 
 function run(args, options = {}) {
@@ -32,34 +31,21 @@ if (!html.includes('<svg') || !html.includes('M20 6 9 17l-5-5')) {
   throw new Error('The Astro fixture did not render the inline SVG.')
 }
 
-const originalConfig = readFileSync(configPath, 'utf8')
-const configWithoutIntegration = originalConfig
-  .replace("import inlineSvg from '@usesvelte/inline-svg/astro'\n", '')
-  .replace('integrations: [svelte(), inlineSvg()]', 'integrations: [svelte()]')
+// The fixture reads this variable instead of rewriting its tracked config.
+const result = spawnSync('pnpm', ['--dir', 'tests/fixtures/astro', 'build'], {
+  cwd: root,
+  encoding: 'utf8',
+  stdio: ['ignore', 'pipe', 'pipe'],
+  shell: process.platform === 'win32',
+  env: { ...process.env, E2E_WITHOUT_INLINE_SVG: '1' },
+})
+const output = `${result.stdout ?? ''}${result.stderr ?? ''}`
 
-if (configWithoutIntegration === originalConfig) {
-  throw new Error('Could not remove the Astro integration from the fixture config.')
+if (result.status === 0) {
+  throw new Error('The Astro build unexpectedly succeeded without the integration.')
 }
-
-try {
-  writeFileSync(configPath, configWithoutIntegration)
-
-  const result = spawnSync('pnpm', ['--dir', 'tests/fixtures/astro', 'build'], {
-    cwd: root,
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'pipe'],
-    shell: process.platform === 'win32',
-  })
-  const output = `${result.stdout ?? ''}${result.stderr ?? ''}`
-
-  if (result.status === 0) {
-    throw new Error('The Astro build unexpectedly succeeded without the integration.')
-  }
-  if (!output.includes('virtual:usesvelte/inline-svg')) {
-    throw new Error(`Expected a virtual module resolution error, got:\n${output}`)
-  }
-} finally {
-  writeFileSync(configPath, originalConfig)
+if (!output.includes('virtual:usesvelte/inline-svg')) {
+  throw new Error(`Expected a virtual module resolution error, got:\n${output}`)
 }
 
 console.log('Astro integration E2E: inline SVG and negative check passed.')
