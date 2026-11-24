@@ -15,14 +15,12 @@ type PluginContext = { warn: (message: string) => void; addWatchFile: (id: strin
 type Hooks = {
   config: () => { optimizeDeps: { exclude: string[] } }
   configResolved: (config: { root: string }) => void
+  configureServer: (server: { moduleGraph: ModuleGraphStub }) => void
   load: (this: PluginContext, id: string) => string | null
   resolveId: (id: string) => string | null
-  watchChange: (this: { environment: { moduleGraph: ModuleGraphStub } }, id: string, change: { event: string }) => void
-  hotUpdate: (
-    this: { environment: { moduleGraph: ModuleGraphStub } },
-    options: { file: string },
-  ) => ModuleNode[] | undefined
-  handleHotUpdate: (options: { file: string; server: { moduleGraph: ModuleGraphStub } }) => ModuleNode[] | undefined
+  watchChange: (this: { environment?: { moduleGraph: ModuleGraphStub } }, id: string, change: { event: string }) => void
+  hotUpdate: (this: { environment: { moduleGraph: ModuleGraphStub } }, options: { file: string }) => void
+  handleHotUpdate: (options: { file: string; server: { moduleGraph: ModuleGraphStub } }) => void
 }
 
 type ModuleNode = { id: string }
@@ -41,6 +39,7 @@ function setup(options: InlineSvgPluginOptions = {}) {
     graph,
     config: () => hooks.config(),
     configResolved: (config: { root: string }) => hooks.configResolved(config),
+    configureServer: (server: { moduleGraph: ModuleGraphStub }) => hooks.configureServer(server),
     load: (id: string) => hooks.load.call({ warn, addWatchFile: vi.fn() }, id),
     resolveId: (id: string) => hooks.resolveId(id),
     watchChange: (id: string, change: { event: string }) =>
@@ -83,12 +82,12 @@ describe('inlineSvg', () => {
     const plugin = setup()
     plugin.configResolved({ root })
 
-    expect(plugin.hotUpdate(path.join(root, 'src/icons/github.svg'))).toEqual([plugin.graph.iconsModule])
-    expect(plugin.hotUpdate(path.join(root, 'src/icons/added.svg'))).toEqual([plugin.graph.iconsModule])
+    plugin.hotUpdate(path.join(root, 'src/icons/github.svg'))
+    plugin.hotUpdate(path.join(root, 'src/icons/added.svg'))
     expect(plugin.graph.invalidateModule).toHaveBeenCalledWith(plugin.graph.iconsModule)
 
-    expect(plugin.hotUpdate(path.join(root, 'src/App.svelte'))).toBeUndefined()
-    expect(plugin.hotUpdate(path.join(root, 'src/icons/README.md'))).toBeUndefined()
+    plugin.hotUpdate(path.join(root, 'src/App.svelte'))
+    plugin.hotUpdate(path.join(root, 'src/icons/README.md'))
     expect(plugin.graph.invalidateModule).toHaveBeenCalledTimes(2)
   })
 
@@ -96,7 +95,7 @@ describe('inlineSvg', () => {
     const plugin = setup()
     plugin.configResolved({ root })
 
-    expect(plugin.handleHotUpdate(path.join(root, 'src/icons/github.svg'))).toEqual([plugin.graph.iconsModule])
+    plugin.handleHotUpdate(path.join(root, 'src/icons/github.svg'))
     expect(plugin.graph.invalidateModule).toHaveBeenCalledWith(plugin.graph.iconsModule)
   })
 
@@ -119,6 +118,24 @@ describe('inlineSvg', () => {
     plugin.watchChange(path.join(root, 'src/App.svelte'), { event: 'create' })
 
     expect(plugin.graph.invalidateModule).not.toHaveBeenCalled()
+  })
+
+  it('does not throw in a watch change context without an environment (vite 5)', () => {
+    const hooks = inlineSvg() as unknown as Hooks
+    hooks.configResolved({ root })
+
+    expect(() => hooks.watchChange.call({}, path.join(root, 'src/icons/added.svg'), { event: 'create' })).not.toThrow()
+  })
+
+  it('uses the dev server module graph when the environment is missing', () => {
+    const hooks = inlineSvg() as unknown as Hooks
+    const graph = moduleGraphStub()
+    hooks.configResolved({ root })
+    hooks.configureServer({ moduleGraph: graph })
+
+    hooks.watchChange.call({}, path.join(root, 'src/icons/added.svg'), { event: 'create' })
+
+    expect(graph.invalidateModule).toHaveBeenCalledWith(graph.iconsModule)
   })
 
   it('only resolves its own virtual module', () => {
