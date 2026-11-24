@@ -1,2 +1,2 @@
 export { default as InlineSvg } from './InlineSvg.svelte'
-export type * from './types.js'
+export type { InlineSvgProps } from './types.js'
