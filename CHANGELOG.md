@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.2.1](https://github.com/usesvelte/inline-svg/compare/v1.2.0...v1.2.1) (2026-11-24)
+
+### 🐛 Bug Fixes
+
+* **core:** ignore inherited icon names and warning keys ([f77412a](https://github.com/usesvelte/inline-svg/commit/f77412adfc50c19e14374808adba00330d9bba55))
+* **core:** reject markup after a self-closing svg root ([dfbed3d](https://github.com/usesvelte/inline-svg/commit/dfbed3d82e5c4d98230b96d867a9ac6a3e49a6b2))
+* **pkg:** align the declared typescript range with the emitted declarations ([9e024dd](https://github.com/usesvelte/inline-svg/commit/9e024ddf739690681537dc9ee3c51da2674b2cd4))
+* **vite:** guard the watch change hook on vite 5 ([e4615da](https://github.com/usesvelte/inline-svg/commit/e4615da0e0b9909ac9512219a1aed960fddd25e3))
+
+### 📝 Tests
+
+* **astro:** stop mutating the fixture config in the e2e check ([a71a56b](https://github.com/usesvelte/inline-svg/commit/a71a56b6050e952ea274fce970eecce579cb1bc2))
+* skip the case-collision check on case-insensitive filesystems ([f955e33](https://github.com/usesvelte/inline-svg/commit/f955e3390b16b5efb90495ade12a6c0b17d9d046))
+
+### Miscellaneous Tasks
+
+* **deps:** bump `release-it` version to 21.1.3 ([ede4cbb](https://github.com/usesvelte/inline-svg/commit/ede4cbb628a95e90f06d759fbb96fc82a1d75a7c))
+
 ## [1.2.0](https://github.com/usesvelte/inline-svg/compare/v1.1.0...v1.2.0) (2026-11-21)
 
 ### ✨ Features
