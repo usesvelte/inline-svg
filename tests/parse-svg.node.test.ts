@@ -46,6 +46,15 @@ describe('parseSvg (server)', () => {
     warn.mockRestore()
   })
 
+  it('rejects markup after a self-closing root', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    expect(parseSvg('<svg width="1" /><div />', 'self-closing-trailing')).toEqual({ attrs: {}, content: '' })
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('not a valid xml document'))
+
+    warn.mockRestore()
+  })
+
   it('ignores the xml prolog', () => {
     const { attrs } = parseSvg('<?xml version="1.0"?><svg width="1" />', 'prolog')
 

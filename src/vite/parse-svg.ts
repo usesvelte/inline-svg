@@ -152,7 +152,12 @@ function parseMarkup(raw: string, name: string): ParsedSvg {
 
   const selfClosing = raw.charAt(openingEnd - 1) === '/'
   const attrs = collectAttrsFromMarkup(raw.slice(openingStart + 4, openingEnd - (selfClosing ? 1 : 0)))
-  if (selfClosing) return { attrs, content: '' }
+  if (selfClosing) {
+    if (skipMisc(raw, openingEnd + 1) !== raw.length) {
+      return warn(name, `"${name}" is not a valid xml document`)
+    }
+    return { attrs, content: '' }
+  }
 
   const stack = ['svg']
   let index = openingEnd + 1
